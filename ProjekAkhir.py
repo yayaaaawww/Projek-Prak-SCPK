@@ -14,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-#THEME & GLOBAL CSS (BG & SLIDER) 
+# THEME & GLOBAL CSS
 SEA_BG_URL = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/piotrzakrzewski-sea-8132583_1920.jpg"
 
 st.markdown(f"""
@@ -170,7 +170,7 @@ st.markdown("""
   ">VesselOptima Hub</h1>
   <p style="color:#8899bb; font-size:0.95rem; margin:0;">
     Seleksi Otomatis Pelayaran Kapal Terbaik untuk Prioritas Sandar Dermaga &nbsp;|&nbsp;
-    <span style="color:#84d8c4;">Fuzzy Standard Logic</span>
+    <span style="color:#84d8c4;">Fuzzy Mamdani Fast-Matrix Logic</span>
   </p>
 </div>
 """, unsafe_allow_html=True)
@@ -178,30 +178,17 @@ st.markdown("""
 # DATA LOADING
 @st.cache_data
 def load_data():
-    try:
-        df_raw = pd.read_csv("Ship_Performance_Dataset.csv")
-        return df_raw.dropna()
-    except FileNotFoundError:
-        np.random.seed(42)
-        n_data = 300
-        return pd.DataFrame({
-            "Ship_Type": np.random.choice(["Container Ship", "Fish Carrier", "Bulk Carrier", "Tanker"], n_data),
-            "Route_Type": np.random.choice(["Coastal", "Short-haul", "Long-haul", "Transoceanic"], n_data),
-            "Speed_Over_Ground_knots": np.random.uniform(9, 22, n_data),
-            "Cargo_Weight_tons": np.random.uniform(1000, 50000, n_data),
-            "Revenue_per_Voyage_USD": np.random.uniform(150000, 800000, n_data),
-            "Operational_Cost_USD": np.random.uniform(100000, 500000, n_data),
-            "Turnaround_Time_hours": np.random.uniform(12, 96, n_data)
-        })
+    df_raw = pd.read_csv("Ship_Performance_Dataset.csv")
+    return df_raw.dropna()
 
 df = load_data()
 
 CRITERIA = {
-    "Speed_Over_Ground_knots":  {"label": "Kecepatan (knots)",   "benefit": True},
-    "Cargo_Weight_tons":        {"label": "Bobot Kargo (ton)",   "benefit": True},
-    "Revenue_per_Voyage_USD":   {"label": "Revenue Finansial (USD)", "benefit": True},
-    "Operational_Cost_USD":     {"label": "Biaya Operasional (USD)", "benefit": False},
-    "Turnaround_Time_hours":    {"label": "Waktu Tambat (jam)", "benefit": False},
+    "Speed_Over_Ground_knots":  {"label": "Kecepatan (knots)",       "benefit": True},
+    "Cargo_Weight_tons":        {"label": "Bobot Kargo (ton)",        "benefit": True},
+    "Revenue_per_Voyage_USD":   {"label": "Revenue Finansial (USD)",  "benefit": True},
+    "Operational_Cost_USD":     {"label": "Biaya Operasional (USD)",  "benefit": False},
+    "Turnaround_Time_hours":    {"label": "Waktu Tambat (jam)",       "benefit": False},
 }
 CRIT_KEYS = list(CRITERIA.keys())
 
@@ -216,11 +203,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown('<p style="color:#84d8c4; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Bobot Pengaruh Kriteria</p>', unsafe_allow_html=True)
-    w_speed = st.slider("Kecepatan Kapal", 0.0, 1.0, 0.20, 0.05)
-    w_cargo = st.slider("Kapasitas Muatan", 0.0, 1.0, 0.20, 0.05)
-    w_rev   = st.slider("Revenue Keuntungan", 0.0, 1.0, 0.20, 0.05)
-    w_cost  = st.slider("Efisiensi Biaya", 0.0, 1.0, 0.20, 0.05)
-    w_turn  = st.slider("Efisiensi Waktu Sandar", 0.0, 1.0, 0.20, 0.05)
+    w_speed = st.slider("Kecepatan Kapal",        0.0, 1.0, 0.20, 0.05)
+    w_cargo = st.slider("Kapasitas Muatan",        0.0, 1.0, 0.20, 0.05)
+    w_rev   = st.slider("Revenue Keuntungan",      0.0, 1.0, 0.20, 0.05)
+    w_cost  = st.slider("Efisiensi Biaya",         0.0, 1.0, 0.20, 0.05)
+    w_turn  = st.slider("Efisiensi Waktu Sandar",  0.0, 1.0, 0.20, 0.05)
 
     total_w = w_speed + w_cargo + w_rev + w_cost + w_turn
     is_weight_valid = abs(total_w - 1.0) < 0.01
@@ -232,15 +219,15 @@ with st.sidebar:
 
     st.markdown('<hr style="border-color:rgba(255,255,255,0.1); margin:16px 0;">', unsafe_allow_html=True)
     st.markdown('<p style="color:#84d8c4; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Filter Kunjungan</p>', unsafe_allow_html=True)
-    
-    top_n = st.number_input("Tampilkan Top Kapal", min_value=5, max_value=50, value=15, step=5)
-    ship_filter = st.selectbox("Jenis Kapal Kargo", ["Semua"] + sorted(df["Ship_Type"].dropna().astype(str).unique().tolist()))
-    route_filter = st.selectbox("Zona Rute Sandar", ["Semua"] + sorted(df["Route_Type"].dropna().astype(str).unique().tolist()))
+
+    top_n        = st.number_input("Tampilkan Top Kapal", min_value=5, max_value=50, value=15, step=5)
+    ship_filter  = st.selectbox("Jenis Kapal Kargo",  ["Semua"] + sorted(df["Ship_Type"].dropna().astype(str).unique().tolist()))
+    route_filter = st.selectbox("Zona Rute Sandar",   ["Semua"] + sorted(df["Route_Type"].dropna().astype(str).unique().tolist()))
 
     st.markdown('<hr style="border-color:rgba(255,255,255,0.1); margin:16px 0;">', unsafe_allow_html=True)
     run = st.button("Jalankan Seleksi Fuzzy", use_container_width=True, disabled=not is_weight_valid)
 
-# TABS LAYOUT
+# TABS
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Log Kunjungan Pelabuhan",
     "Kurva Keanggotaan Fuzzy",
@@ -249,39 +236,39 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "Tim Pengembang"
 ])
 
+# FILTER DATA
+df_filtered = df.copy()
+if ship_filter  != "Semua":
+    df_filtered = df_filtered[df_filtered["Ship_Type"]  == ship_filter]
+if route_filter != "Semua":
+    df_filtered = df_filtered[df_filtered["Route_Type"] == route_filter]
 
-# TAB 1 — LOG KUNJUNGAN PELABUHAN
+
+# TAB 1 — LOG KUNJUNGAN
 with tab1:
     st.markdown("### Log Histori Kedatangan Kapal")
-    
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("Total Pelayaran Terdata", f"{len(df):,}")
-    col_m2.metric("Kategori Kapal", df["Ship_Type"].nunique())
-    col_m3.metric("Rata-rata Muatan", f"{df['Cargo_Weight_tons'].mean():,.1f} ton")
-    col_m4.metric("Rata-rata Waktu Sandar", f"{df['Turnaround_Time_hours'].mean():.1f} jam")
-    
-    st.divider()
-    
-    df_filtered = df.copy()
-    if ship_filter != "Semua":
-        df_filtered = df_filtered[df_filtered["Ship_Type"] == ship_filter]
-    if route_filter != "Semua":
-        df_filtered = df_filtered[df_filtered["Route_Type"] == route_filter]
-        
-    st.caption(f"Menampilkan {len(df_filtered):,} rekor kapal aktif berdasarkan filter")
-    st.dataframe(df_filtered, use_container_width=True, height=350)
 
-# TAB 2 — KURVA KEANGGOTAAN FUZZY
+    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+    col_m1.metric("Total Pelayaran Terdata",  f"{len(df):,}")
+    col_m2.metric("Kategori Kapal",           df["Ship_Type"].nunique())
+    col_m3.metric("Rata-rata Muatan",         f"{df['Cargo_Weight_tons'].mean():,.1f} ton")
+    col_m4.metric("Rata-rata Waktu Sandar",   f"{df['Turnaround_Time_hours'].mean():.1f} jam")
+
+    st.divider()
+    st.caption(f"Menampilkan {len(df_filtered):,} rekor kapal aktif berdasarkan filter")
+    st.dataframe(df_filtered, use_container_width=True, height=400)
+
+
+# TAB 2 — KURVA KEANGGOTAAN
 with tab2:
     st.markdown("### Visualisasi Fungsi Keanggotaan")
     st.caption("Kurva keanggotaan variabel linguistik (Rendah, Sedang, Tinggi) untuk seluruh kriteria penilaian fuzifikasi.")
 
-    MF_COLORS = {"Low": "#2a9d8f", "Medium": "#f7a5b0", "High": "#e8637a"}
+    MF_COLORS = {"Rendah": "#2a9d8f", "Sedang": "#f7a5b0", "Tinggi": "#e8637a"}
 
-    # Visualisasi kurva menggunakan skfuzzy.trimf untuk ke-5 kriteria
     for key in CRIT_KEYS:
         label = CRITERIA[key]["label"]
-        x = np.linspace(df[key].min(), df[key].max(), 200)
+        x   = np.linspace(df[key].min(), df[key].max(), 200)
         mid = np.median(df[key])
 
         mfs = {
@@ -292,7 +279,7 @@ with tab2:
 
         fig, ax = plt.subplots(figsize=(8, 2.5))
         for name, mf in mfs.items():
-            c = MF_COLORS["Low"] if name == "Rendah" else (MF_COLORS["Medium"] if name == "Sedang" else MF_COLORS["High"])
+            c = MF_COLORS[name]
             ax.plot(x, mf, color=c, linewidth=2, label=name)
             ax.fill_between(x, mf, alpha=0.1, color=c)
 
@@ -308,19 +295,19 @@ with tab2:
 
     st.divider()
     st.markdown("**Variabel Output: Indeks Skor Prioritas Pelayanan**")
-    x_out = np.linspace(0, 100, 200)
-    mfs_out = {
-        "Rendah": fuzz.trimf(x_out, [0, 0, 50]),
-        "Sedang": fuzz.trimf(x_out, [0, 50, 100]),
+    x_out    = np.linspace(0, 100, 200)
+    mfs_out  = {
+        "Rendah": fuzz.trimf(x_out, [0,  0,  50]),
+        "Sedang": fuzz.trimf(x_out, [0,  50, 100]),
         "Tinggi": fuzz.trimf(x_out, [50, 100, 100]),
     }
-    
+
     fig3, ax3 = plt.subplots(figsize=(8, 2.5))
     for name, mf in mfs_out.items():
-        c = MF_COLORS["Low"] if name == "Rendah" else (MF_COLORS["Medium"] if name == "Sedang" else MF_COLORS["High"])
+        c = MF_COLORS[name]
         ax3.plot(x_out, mf, color=c, linewidth=2, label=name)
         ax3.fill_between(x_out, mf, alpha=0.1, color=c)
-        
+
     ax3.set_title("Output: Tingkat Kelayakan Sandar Kapal", color="#f0f6ff", fontsize=10, pad=8)
     ax3.set_yticks([0, 0.5, 1.0])
     ax3.set_ylim(-0.05, 1.1)
@@ -331,12 +318,13 @@ with tab2:
     st.pyplot(fig3)
     plt.close()
 
+
 # TAB 3 — BASIS ATURAN
 with tab3:
     st.markdown("### Basis Aturan Keputusan Fuzzy")
     st.caption("Kombinasi keputusan logis dari interaksi 5 matriks parameter pelayaran.")
 
-    LEVELS = ["Rendah", "Sedang", "Tinggi"]
+    LEVELS    = ["Rendah", "Sedang", "Tinggi"]
     SCORE_MAP = {"Rendah": 0, "Sedang": 1, "Tinggi": 2}
     OUT_MAP   = lambda s: "Tinggi" if s >= 3 else ("Rendah" if s <= -1 else "Sedang")
 
@@ -348,17 +336,16 @@ with tab3:
                     for tr in LEVELS:
                         score = (SCORE_MAP[spd] + SCORE_MAP[cg] + SCORE_MAP[rv]
                                  - SCORE_MAP[cs] - SCORE_MAP[tr])
-                        out = OUT_MAP(score)
                         rules.append({
-                            "JIKA Kecepatan":  spd,
-                            "DAN Kargo":       cg,
-                            "DAN Revenue":     rv,
-                            "DAN Biaya Op.":   cs,
+                            "JIKA Kecepatan":   spd,
+                            "DAN Kargo":        cg,
+                            "DAN Revenue":      rv,
+                            "DAN Biaya Op.":    cs,
                             "DAN Waktu Sandar": tr,
-                            "MAKA Prioritas":  out
+                            "MAKA Prioritas":   OUT_MAP(score)
                         })
 
-    rule_df = pd.DataFrame(rules)
+    rule_df    = pd.DataFrame(rules)
     out_counts = rule_df["MAKA Prioritas"].value_counts()
 
     LOCAL_COLORS = {"Rendah": "#e8637a", "Sedang": "#f7a5b0", "Tinggi": "#2a9d8f"}
@@ -367,25 +354,18 @@ with tab3:
 
     with col_r2:
         fig, ax = plt.subplots(figsize=(4.5, 4.5))
-        
-        # Mapping warna pie chart
         pie_colors = [LOCAL_COLORS.get(l, "#84d8c4") for l in out_counts.index]
-        
         wedges, texts, autotexts = ax.pie(
-            out_counts.values, 
+            out_counts.values,
             labels=out_counts.index,
-            colors=pie_colors, 
-            autopct="%1.1f%%", 
-            pctdistance=0.7, 
+            colors=pie_colors,
+            autopct="%1.1f%%",
+            pctdistance=0.7,
             startangle=140,
             wedgeprops={"edgecolor": "#060b19", "linewidth": 2, "alpha": 0.9}
         )
-        for t in texts: 
-            t.set_color("#f0f6ff")
-        for at in autotexts:
-            at.set_color("#060b19")
-            at.set_fontweight("bold")
-            
+        for t  in texts:     t.set_color("#f0f6ff")
+        for at in autotexts: at.set_color("#060b19"); at.set_fontweight("bold")
         ax.set_title("Distribusi Penetapan\nPrioritas Pelayanan", color="#f0f6ff", fontsize=11, pad=10)
         fig.tight_layout()
         st.pyplot(fig)
@@ -393,120 +373,237 @@ with tab3:
 
     with col_r1:
         def color_output(val):
-            color_map = {
+            return {
                 "Tinggi": "background-color:#1a4a30; color:#84d8c4",
                 "Sedang": "background-color:#3a2a10; color:#f4c542",
                 "Rendah": "background-color:#3a1020; color:#f7a5b0",
-            }
-            return color_map.get(val, "")
+            }.get(val, "")
 
-        styled = rule_df.style.map(color_output, subset=["MAKA Prioritas"])
-        st.dataframe(styled, height=420, use_container_width=True)
+        st.dataframe(
+            rule_df.style.map(color_output, subset=["MAKA Prioritas"]),
+            height=420, use_container_width=True
+        )
 
-# TAB 4 — HASIL REKOMENDASI KAPAL TERBAIK
+
+# TAB 4 — HASIL REKOMENDASI
 with tab4:
     st.markdown("### Hasil Perankingan Kapal Terbaik")
 
     if not is_weight_valid:
-        st.warning("Perhitungan Terkunci. Silakan sesuaikan jumlah kriteria bobot di sidebar agar bernilai pas 1.00.")
+        st.warning("Perhitungan Terkunci. Silakan sesuaikan bobot di sidebar agar bernilai pas 1.00.")
+
     elif not run:
         st.markdown("""
-        <div style="background:rgba(6,11,25,0.6); border:1px dashed rgba(255,255,255,0.2); border-radius:14px; padding:40px; text-align:center; color:#8899bb;">
+        <div style="background:rgba(6,11,25,0.6); border:1px dashed rgba(255,255,255,0.2);
+                    border-radius:14px; padding:40px; text-align:center; color:#8899bb;">
             <div style="font-size:2.5rem; margin-bottom:12px;">⚓</div>
-            <div style="font-size:1rem;">Kriteria Bobot Valid Klik tombol<br>
+            <div style="font-size:1rem;">Kriteria Bobot Valid. Klik tombol<br>
             <b style="color:#84d8c4;">Jalankan Seleksi Fuzzy</b> di sidebar untuk memproses perangkingan armada.</div>
         </div>
         """, unsafe_allow_html=True)
-    else:
-        weights = np.array([w_speed, w_cargo, w_rev, w_cost, w_turn])
-        weights /= weights.sum()
 
+    else:
         if df_filtered.empty:
             st.error("Data kosong untuk kombinasi filter ini.")
         else:
-            def normalize_col(series, is_benefit):
-                mn, mx = series.min(), series.max()
-                if mx == mn: return pd.Series(np.ones(len(series)), index=series.index)
-                return (series - mn) / (mx - mn) if is_benefit else (mx - series) / (mx - mn)
+            with st.spinner("Menghitung menggunakan Vektorisasi Matriks Mamdani..."):
+                try:
+                    # 1. SEMESTA OUTPUT
+                    x_out    = np.linspace(0, 100, 50)
+                    out_low  = fuzz.trimf(x_out, [0,  0,  50])
+                    out_med  = fuzz.trimf(x_out, [0,  50, 100])
+                    out_high = fuzz.trimf(x_out, [50, 100, 100])
 
-            norm_matrix = {}
-            norm_matrix["Speed_Over_Ground_knots"] = normalize_col(df_filtered["Speed_Over_Ground_knots"], CRITERIA["Speed_Over_Ground_knots"]["benefit"])
-            norm_matrix["Cargo_Weight_tons"] = normalize_col(df_filtered["Cargo_Weight_tons"], CRITERIA["Cargo_Weight_tons"]["benefit"])
-            norm_matrix["Revenue_per_Voyage_USD"] = normalize_col(df_filtered["Revenue_per_Voyage_USD"], CRITERIA["Revenue_per_Voyage_USD"]["benefit"])
-            norm_matrix["Operational_Cost_USD"] = normalize_col(df_filtered["Operational_Cost_USD"], CRITERIA["Operational_Cost_USD"]["benefit"])
-            norm_matrix["Turnaround_Time_hours"] = normalize_col(df_filtered["Turnaround_Time_hours"], CRITERIA["Turnaround_Time_hours"]["benefit"])
+                    # 2. PRE-COMPUTE RULE CONSEQUENTS (bobot-aware)
+                    levels    = ["Rendah", "Sedang", "Tinggi"]
+                    score_map = {"Rendah": 0, "Sedang": 1, "Tinggi": 2}
+                    rule_consequents = []
 
-            final_scores = (weights[0] * norm_matrix["Speed_Over_Ground_knots"] +
-                            weights[1] * norm_matrix["Cargo_Weight_tons"] +
-                            weights[2] * norm_matrix["Revenue_per_Voyage_USD"] +
-                            weights[3] * norm_matrix["Operational_Cost_USD"] +
-                            weights[4] * norm_matrix["Turnaround_Time_hours"]) * 100
+                    for spd in levels:
+                        for cg in levels:
+                            for rv in levels:
+                                for cs in levels:
+                                    for tr in levels:
+                                        effect = (
+                                            w_speed * score_map[spd]
+                                            + w_cargo * score_map[cg]
+                                            + w_rev   * score_map[rv]
+                                            - w_cost  * score_map[cs]
+                                            - w_turn  * score_map[tr]
+                                        )
+                                        if   effect >  0.3: rule_consequents.append("Tinggi")
+                                        elif effect < -0.3: rule_consequents.append("Rendah")
+                                        else:               rule_consequents.append("Sedang")
 
-            result_df = df_filtered.copy()
-            result_df["Fuzzy_Score"] = final_scores.values
-            result_df = result_df.sort_values("Fuzzy_Score", ascending=False).reset_index(drop=True)
-            result_df.insert(0, "Rank", range(1, len(result_df) + 1))
+                    fuzzy_scores    = []
+                    fuzzifikasi_logs = []
 
-            top_vessel = result_df.iloc[0]
+                    # 3. LOOP PER KAPAL
+                    for _, row in df_filtered.iterrows():
 
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(6,11,25,0.85), rgba(42,157,143,0.3)); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 20px 28px; margin-bottom: 20px;">
-                <p style="color:#84d8c4; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin:0 0 4px;">Rekomendasi Utama: Kapal dengan Kelayakan Sandar Terbaik (Rank #1)</p>
-                <h2 style="margin:0 0 6px; font-size:1.8rem; background:linear-gradient(90deg, #f0f6ff, #84d8c4); -webkit-background-clip:text; -webkit-text-fill-color: transparent;">
-                    {top_vessel['Ship_Type']} ({top_vessel.get('Route_Type','–')})
-                </h2>
-                <p style="color:#ff8fa3; font-size:0.9rem; margin:0;">
-                    Indeks Kelayakan Fuzzy: <b>{top_vessel['Fuzzy_Score']:.2f} / 100</b> &nbsp;|&nbsp; 
-                    Muatan: {top_vessel['Cargo_Weight_tons']:.1f} ton &nbsp;|&nbsp; 
-                    Waktu Sandar: {top_vessel['Turnaround_Time_hours']:.1f} jam
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+                        # Fuzzifikasi
+                        v_inputs = {}
+                        for key in CRIT_KEYS:
+                            val = row[key]
+                            mn  = df[key].min()
+                            mx  = df[key].max()
+                            md  = np.median(df[key])
+                            if mn == mx: mx = mn + 1
+                            if md == mn or md == mx: md = (mn + mx) / 2
 
-            col_g1, col_g2 = st.columns([1.3, 1])
-            with col_g1:
-                st.markdown(f"**Tabel Top {min(int(top_n), len(result_df))} Urutan Hasil Seleksi**")
-                cols_display = ["Rank", "Ship_Type", "Route_Type", "Speed_Over_Ground_knots", "Cargo_Weight_tons", "Turnaround_Time_hours", "Fuzzy_Score"]
-                st.dataframe(result_df.head(int(top_n))[cols_display], use_container_width=True, height=380)
+                            v_inputs[key] = {
+                                "Rendah": fuzz.interp_membership(np.array([mn, mn, md]), np.array([1.0, 1.0, 0.0]), val),
+                                "Sedang": fuzz.interp_membership(np.array([mn, md, mx]), np.array([0.0, 1.0, 0.0]), val),
+                                "Tinggi": fuzz.interp_membership(np.array([md, mx, mx]), np.array([0.0, 1.0, 1.0]), val),
+                            }
 
-            with col_g2:
-                st.markdown("**Grafik Komparasi Skor Kelayakan**")
-                top_data = result_df.head(int(top_n))
-                fig4, ax4 = plt.subplots(figsize=(5, max(4, len(top_data) * 0.35)))
-                
-                scores_plot = top_data["Fuzzy_Score"].values[::-1]
-                labels_plot = (top_data["Ship_Type"] + " #" + top_data["Rank"].astype(str)).values[::-1]
-                
-                bars = ax4.barh(range(len(scores_plot)), scores_plot, color=plt.cm.YlGnBu(np.linspace(0.3, 0.9, len(scores_plot))), edgecolor="none", height=0.6)
-                ax4.set_yticks(range(len(labels_plot)))
-                ax4.set_yticklabels(labels_plot, fontsize=8)
-                ax4.set_xlabel("Fuzzy Score (0-100)", color="#8899bb")
-                ax4.grid(axis="x", alpha=0.2)
-                ax4.spines[:].set_visible(False)
-                fig4.tight_layout()
-                st.pyplot(fig4)
-                plt.close()
+                        # Inferensi & Agregasi
+                        aggregated_output  = np.zeros_like(x_out)
+                        rules_triggered    = 0
+                        r_idx              = 0
+
+                        for spd in levels:
+                            f_spd = v_inputs["Speed_Over_Ground_knots"][spd]
+                            for cg in levels:
+                                f_cg = v_inputs["Cargo_Weight_tons"][cg]
+                                for rv in levels:
+                                    f_rv = v_inputs["Revenue_per_Voyage_USD"][rv]
+                                    for cs in levels:
+                                        f_cs = v_inputs["Operational_Cost_USD"][cs]
+                                        for tr in levels:
+                                            f_tr = v_inputs["Turnaround_Time_hours"][tr]
+
+                                            activation = min(f_spd, f_cg, f_rv, f_cs, f_tr)
+
+                                            if activation > 0:
+                                                out_type = rule_consequents[r_idx]
+                                                if   out_type == "Tinggi": m_out = np.fmin(activation, out_high)
+                                                elif out_type == "Rendah": m_out = np.fmin(activation, out_low)
+                                                else:                      m_out = np.fmin(activation, out_med)
+
+                                                aggregated_output = np.fmax(aggregated_output, m_out)
+                                                rules_triggered  += 1
+                                            r_idx += 1
+
+                        # Defuzzifikasi Centroid
+                        score_vessel = (
+                            fuzz.defuzz(x_out, aggregated_output, "centroid")
+                            if np.sum(aggregated_output) > 0
+                            else 50.0
+                        )
+
+                        fuzzy_scores.append(score_vessel)
+                        fuzzifikasi_logs.append({
+                            "Ship_Type":               row["Ship_Type"],
+                            "μ Kecepatan (Tinggi)":    round(v_inputs["Speed_Over_Ground_knots"]["Tinggi"], 4),
+                            "μ Kargo (Tinggi)":        round(v_inputs["Cargo_Weight_tons"]["Tinggi"], 4),
+                            "μ Revenue (Tinggi)":      round(v_inputs["Revenue_per_Voyage_USD"]["Tinggi"], 4),
+                            "μ Biaya (Rendah)":        round(v_inputs["Operational_Cost_USD"]["Rendah"], 4),
+                            "μ Waktu (Rendah)":        round(v_inputs["Turnaround_Time_hours"]["Rendah"], 4),
+                            "Rules Aktif":             rules_triggered,
+                            "Defuzz Score":            round(score_vessel, 2),
+                        })
+
+                    # 4. RANKING
+                    result_df = df_filtered.copy()
+                    result_df["Fuzzy_Score"] = fuzzy_scores
+                    result_df = result_df.sort_values("Fuzzy_Score", ascending=False).reset_index(drop=True)
+                    result_df.insert(0, "Rank", range(1, len(result_df) + 1))
+
+                    top_vessel = result_df.iloc[0]
+
+                    # Banner rank #1
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(6,11,25,0.85), rgba(42,157,143,0.3));
+                                border: 1px solid rgba(255,255,255,0.2); border-radius: 16px;
+                                padding: 20px 28px; margin-bottom: 20px;">
+                        <p style="color:#84d8c4; font-size:0.75rem; letter-spacing:2px;
+                                  text-transform:uppercase; margin:0 0 4px;">
+                            Rekomendasi Utama — Defuzzifikasi Centroid Mamdani (Rank #1)
+                        </p>
+                        <h2 style="margin:0 0 6px; font-size:1.8rem;
+                                   background:linear-gradient(90deg,#f0f6ff,#84d8c4);
+                                   -webkit-background-clip:text; -webkit-text-fill-color:transparent;">
+                            {top_vessel['Ship_Type']} ({top_vessel.get('Route_Type','–')})
+                        </h2>
+                        <p style="color:#ff8fa3; font-size:0.9rem; margin:0;">
+                            Indeks Kelayakan: <b>{top_vessel['Fuzzy_Score']:.2f} / 100</b>
+                            &nbsp;|&nbsp; Muatan: {top_vessel['Cargo_Weight_tons']:.1f} ton
+                            &nbsp;|&nbsp; Waktu Sandar: {top_vessel['Turnaround_Time_hours']:.1f} jam
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    col_g1, col_g2 = st.columns([1.3, 1])
+
+                    with col_g1:
+                        st.markdown(f"**Tabel Top {min(int(top_n), len(result_df))} Hasil Seleksi**")
+                        cols_display = ["Rank", "Ship_Type", "Route_Type",
+                                        "Speed_Over_Ground_knots", "Cargo_Weight_tons",
+                                        "Turnaround_Time_hours", "Fuzzy_Score"]
+                        st.dataframe(result_df.head(int(top_n))[cols_display],
+                                     use_container_width=True, height=380)
+
+                    with col_g2:
+                        st.markdown("**Grafik Komparasi Skor Kelayakan**")
+                        top_data    = result_df.head(int(top_n))
+                        scores_plot = top_data["Fuzzy_Score"].values[::-1]
+                        labels_plot = (top_data["Ship_Type"] + " #" + top_data["Rank"].astype(str)).values[::-1]
+
+                        fig4, ax4 = plt.subplots(figsize=(5, max(4, len(top_data) * 0.35)))
+                        ax4.barh(
+                            range(len(scores_plot)), scores_plot,
+                            color=plt.cm.YlGnBu(np.linspace(0.3, 0.9, len(scores_plot))),
+                            edgecolor="none", height=0.6
+                        )
+                        ax4.set_yticks(range(len(labels_plot)))
+                        ax4.set_yticklabels(labels_plot, fontsize=8)
+                        ax4.set_xlabel("Mamdani Score (0–100)", color="#8899bb")
+                        ax4.grid(axis="x", alpha=0.2)
+                        ax4.spines[:].set_visible(False)
+                        fig4.tight_layout()
+                        st.pyplot(fig4)
+                        plt.close()
+
+                    # 5. LOG TRANSPARANSI SPK
+                    st.divider()
+                    st.markdown("### 📝 Transparansi Proses SPK")
+                    st.caption(
+                        "Tabel berikut menampilkan nilai alfa-cut (fuzzifikasi) dan jumlah basis aturan "
+                        "yang aktif untuk setiap kapal sebelum dilakukan defuzzifikasi Centroid."
+                    )
+                    st.dataframe(pd.DataFrame(fuzzifikasi_logs), use_container_width=True, height=300)
+
+                except Exception as e:
+                    st.error(f"Terjadi kesalahan komputasi fuzzy: {e}")
+
 
 # TAB 5 — TIM PENGEMBANG
 with tab5:
     st.markdown("### Profil Analis Kelompok")
-    col_d1, col_d2 = st.columns(2)
+
+    URL_FOTO_KURNIA  = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/WhatsApp%20Image%202026-06-04%20at%2013.09.13.jpeg"
+    URL_FOTO_SABRINA = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/WhatsApp%20Image%202026-06-04%20at%2013.04.29.jpeg"
 
     def draw_profile(col, name, nim, img_url):
         col.markdown(f"""
-        <div style="background: rgba(6,11,25,0.6); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 28px 24px; text-align: center;">
-            <div style="width:100px; height:100px; border-radius:50%; overflow:hidden; border: 3px solid #84d8c4; box-shadow: 0 0 10px rgba(132,216,196,0.5); margin:0 auto 14px; display:flex; align-items:center; justify-content:center;">
-                <img src="{img_url}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+        <div style="background:rgba(6,11,25,0.6); border:1px solid rgba(255,255,255,0.15);
+                    border-radius:16px; padding:28px 24px; text-align:center;">
+            <div style="width:100px; height:100px; border-radius:50%; overflow:hidden;
+                        border:3px solid #84d8c4; box-shadow:0 0 10px rgba(132,216,196,0.5);
+                        margin:0 auto 14px; display:flex; align-items:center; justify-content:center;">
+                <img src="{img_url}" style="width:100%; height:100%; object-fit:cover;"
+                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
             </div>
-            <h3 style="margin:0 0 6px; background:linear-gradient(90deg,#84d8c4,#ff8fa3); -webkit-background-clip:text; -webkit-text-fill-color: transparent; font-size:1.1rem;">{name}</h3>
+            <h3 style="margin:0 0 6px; background:linear-gradient(90deg,#84d8c4,#ff8fa3);
+                       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+                       font-size:1.1rem;">{name}</h3>
             <p style="color:#f4c542; font-size:0.82rem; margin:0 0 4px; font-weight:600;">{nim}</p>
             <p style="color:#8899bb; font-size:0.78rem; margin:0;">Program Studi Informatika</p>
             <p style="color:#8899bb; font-size:0.78rem; margin:0;">UPN "Veteran" Yogyakarta</p>
         </div>
         """, unsafe_allow_html=True)
 
-    URL_FOTO_KURNIA  = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/WhatsApp%20Image%202026-06-04%20at%2013.09.13.jpeg"
-    URL_FOTO_SABRINA = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/WhatsApp%20Image%202026-06-04%20at%2013.04.29.jpeg"
-
+    col_d1, col_d2 = st.columns(2)
     draw_profile(col_d1, "Kurnia Ardiningrum", "NIM: 123240101", URL_FOTO_KURNIA)
-    draw_profile(col_d2, "Sabrina Alya", "NIM: 123240196", URL_FOTO_SABRINA)
+    draw_profile(col_d2, "Sabrina Alya",       "NIM: 123240196", URL_FOTO_SABRINA)
