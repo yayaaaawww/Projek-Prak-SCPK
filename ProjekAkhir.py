@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 #THEME & GLOBAL CSS (BG & SLIDER) 
-SEA_BG_URL = "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?q=80&w=1925&auto=format&fit=crop"
+SEA_BG_URL = "https://raw.githubusercontent.com/yayaaaawww/Projek-Prak-SCPK/main/piotrzakrzewski-sea-8132583_1920.jpg"
 
 st.markdown(f"""
 <style>
