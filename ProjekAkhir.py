@@ -220,7 +220,7 @@ with st.sidebar:
     st.markdown('<hr style="border-color:rgba(255,255,255,0.1); margin:16px 0;">', unsafe_allow_html=True)
     st.markdown('<p style="color:#84d8c4; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;">Filter Kunjungan</p>', unsafe_allow_html=True)
 
-    top_n        = st.number_input("Tampilkan Top Kapal", min_value=5, max_value=50, value=15, step=5)
+    top_n    = st.number_input("Tampilkan Top Kapal", min_value=5, max_value=50, value=15, step=5)
     ship_filter  = st.selectbox("Jenis Kapal Kargo",  ["Semua"] + sorted(df["Ship_Type"].dropna().astype(str).unique().tolist()))
     route_filter = st.selectbox("Zona Rute Sandar",   ["Semua"] + sorted(df["Route_Type"].dropna().astype(str).unique().tolist()))
 
@@ -458,7 +458,7 @@ with tab4:
                             }
 
                         # Inferensi & Agregasi
-                        aggregated_output  = np.zeros_like(x_out)
+                        aggregated_output = np.zeros_like(x_out)
                         rules_triggered    = 0
                         r_idx              = 0
 
@@ -534,13 +534,15 @@ with tab4:
                     </div>
                     """, unsafe_allow_html=True)
 
-                    col_g1, col_g2 = st.columns([1.3, 1])
+                    col_g1, col_g2 = st.columns([1.5, 1])
 
                     with col_g1:
                         st.markdown(f"**Tabel Top {min(int(top_n), len(result_df))} Hasil Seleksi**")
-                        cols_display = ["Rank", "Ship_Type", "Route_Type",
-                                        "Speed_Over_Ground_knots", "Cargo_Weight_tons",
-                                        "Turnaround_Time_hours", "Fuzzy_Score"]
+                        cols_display = [
+                            "Rank", "Ship_Type", "Route_Type",
+                            "Speed_Over_Ground_knots", "Cargo_Weight_tons", "Revenue_per_Voyage_USD",
+                            "Operational_Cost_USD", "Turnaround_Time_hours", "Fuzzy_Score"
+                        ]
                         st.dataframe(result_df.head(int(top_n))[cols_display],
                                      use_container_width=True, height=380)
 
@@ -572,7 +574,25 @@ with tab4:
                         "Tabel berikut menampilkan nilai alfa-cut (fuzzifikasi) dan jumlah basis aturan "
                         "yang aktif untuk setiap kapal sebelum dilakukan defuzzifikasi Centroid."
                     )
-                    st.dataframe(pd.DataFrame(fuzzifikasi_logs), use_container_width=True, height=300)
+                    
+                    df_logs = pd.DataFrame(fuzzifikasi_logs)
+
+                    def style_fuzzy_values(val):
+                        if isinstance(val, (int, float)):
+                            if val == 0:
+                                return "color: #4a5568; font-weight: 300;"  # Muted Gray
+                            else:
+                                return "color: #84d8c4; font-weight: 600;"  # Bright Teal
+                        return ""
+
+                    st.dataframe(
+                        df_logs.style.map(style_fuzzy_values, subset=[
+                            "μ Kecepatan (Tinggi)", "μ Kargo (Tinggi)", 
+                            "μ Revenue (Tinggi)", "μ Biaya (Rendah)", "μ Waktu (Rendah)"
+                        ]), 
+                        use_container_width=True, 
+                        height=300
+                    )
 
                 except Exception as e:
                     st.error(f"Terjadi kesalahan komputasi fuzzy: {e}")
